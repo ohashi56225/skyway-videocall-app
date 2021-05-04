@@ -1,80 +1,58 @@
 <!DOCTYPE html>
-<html>
-
-<head>
-    <meta charset="utf-8" />
-    <title>Chat</title>
+<html lang="js">
+  <head>
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-</head>
-<script>
-    var uri = 'ws://localhost:8001';
+    <title>SkyWay - P2P Application</title>
+    <link rel="stylesheet" href="../src/style.css">
+  </head>
+  <body>
+    <div id="container"> <!-- コンテナ -->
+        <h1>P2P Media example</h1>
+        <div id="remote-field">
+            <p>Remote Video</p>
+            <div id="remote-stream">
+                <video id="js-remote-stream"></video>
+            </div>
+        </div>
+        <div id="local-field">
+            <p>Local Video</p>
+            <div id="local-stream">
+                <video id="js-local-stream"></video>
+            </div>
+        </div>
+        <div id="operation-field">
+            <div>
+                <p>Your ID: <span id="js-local-id"></span></p>
+                <input type="text" placeholder="Remote Peer ID" id="js-remote-id">
+                <button id="js-connect-trigger">Connect</button>
+                <button id="js-call-trigger" disabled>Call</button>
+                <button id="js-close-trigger" disabled>Close</button>
+            </div>
+            <div>
+                <p>Record: 
+                    <button id="js-record-trigger">Start</button>
+                </p>
+                <p>Download:
+                    <a href="javascript:void(0)" id="downloadlink-local">Local</a>
+                    <a href="javascript:void(0)" id="downloadlink-remote">Remote</a>
+                </p>
+            </div>
+            <div>
+                <pre class="messages" id="js-messages"></pre>
+                <input type="text" id="js-local-text">
+                <button id="js-send-trigger">Send</button>
+            </div>
+            <div>
+                <button id="js-start-trigger">Start</button>
+                <button id="js-restart-trigger">Restart</button>
+                <button id="js-end-trigger">End</button>
+            </div>
+        </div>
+    </div>
 
-    window.onload = function () {
-        connection = new WebSocket(uri);
-        connection.onopen = onOpen;
-        connection.onmessage = onMessage;
-    }
-
-    function onOpen(event) {
-        console.log("Connect successful!");
-    }
-
-    function onMessage(event) {
-        //Incoming data
-        console.log(event.data);
-        addRow(event.data);
-    }
-
-    function websocketSend(data) {
-        //Send data
-        connection.send(data);
-    }
-
-    function prepareSend() {
-        var form = document.forms.form;
-        if (form.message.value != "") {
-            websocketSend(form.message.value);
-        }
-    }
-
-    function addRow(data){
-        var table = document.getElementById("table");
-        var a = document.createElement('a');
-        var text = document.createTextNode(data);
-        var br = document.createElement('br');
-        a.appendChild(text);
-        table.appendChild(a);
-        table.appendChild(br);
-        
-    }
-</script>
-
-<style>
-    #sendButton {
-
-        margin: 10px;
-        background-color: gray;
-        color: white;
-        height: 20px;
-        width: 100px;
-
-    }
-
-    .table {
-        height: 50px;
-        width: 300px;
-    }
-
-</style>
-
-<body>
-    <center>
-        <form name='form'>
-            <input type="text" name="message">
-        </form>
-        <div id="sendButton" onclick="prepareSend()">SEND</div>
-        <div id="table"></div>
-    </center>
-</body>
-
+    <script src="https://cdn.webrtc.ecl.ntt.com/skyway-latest.js"></script>
+    <script src="../scr/key.js"></script>
+    <script src="../scr/script.js"></script>
+  </body>
 </html>
