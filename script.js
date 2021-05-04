@@ -44,7 +44,15 @@ var myHandler = (function(){
 
     let isCalling = 0
 
-    // クリックした時の処理
+    let localRecorder = null;
+    let remoteRecorder = null;
+
+    let keySend = null;
+    let keyStart = null;
+    let keyRestart = null;
+    let keyEnd = null;
+
+    // 各コマンドのボタンをクリックしたときの処理
     function onClickBtn(dataConnection, type) {
         return function() {
             const data = {
@@ -61,20 +69,17 @@ var myHandler = (function(){
             messages.textContent += `${data.peerid}: ${data.message}\n`;
         }
     }
-
-    let keySend = null;
-    let keyStart = null;
-    let keyRestart = null;
-    let keyEnd = null;
-
-    let localRecorder = null;
-    let remoteRecorder = null;
+    
+    const peer = (window.peer = new Peer({
+        key: window.__SKYWAY_KEY__,
+        debug: 3,
+    }));
 
     const localStream = await navigator.mediaDevices.getUserMedia({
         audio: true,
         video: { 
-            width: {min: 640, max: 640}, 
-            height: {min: 480, max: 480}
+            width: {min: 320, max: 320}, 
+            height: {min: 240, max: 240}
         }
     }).catch(console.error);
 
@@ -83,19 +88,13 @@ var myHandler = (function(){
     localVideo.srcObject = localStream;
     localVideo.playsInline = true;
     await localVideo.play().catch(console.error);
-    
-    const peer = (window.peer = new Peer({
-        key: window.__SKYWAY_KEY__,
-        debug: 3,
-    }));
-
 
     // handsonでは，peer.on(...)となっていたが，よくわからないのでpeer.once(...)のままにしておく
     peer.once('open', id => (localId.textContent = id));
 
     peer.on('error', console.error);
 
-    // connect/callボタンを押したときに実行
+    // connectボタンを押したときに実行
     connectTrigger.addEventListener('click', () => {
         // まだシグナリングサーバーからopenされていない場合はreturn
         if (!peer.open || !remoteId.value) {
@@ -115,14 +114,15 @@ var myHandler = (function(){
                     messages.textContent += `${data.peerid}: ${data.message}\n`;
                     messages.textContent += `=== DataConnection has been opened ===\n`;
 
-                    //イベントを定義すると同時に返ってきたkeyを取得;
+                    //イベントを定義して，各keyを取得
                     keySend = myHandler.addListener(sendTrigger, 'click', onClickBtn(dataConnection, "/send"), false);
                     keyStart = myHandler.addListener(startTrigger, 'click', onClickBtn(dataConnection, "/start"), false);
                     keyRestart = myHandler.addListener(restartTrigger, 'click', onClickBtn(dataConnection, "/restart"), false);
                     keyEnd = myHandler.addListener(endTrigger, 'click', onClickBtn(dataConnection, "/end"), false);
                     
-                    // callボタンを活性化
+                    // call, closeボタンを活性化
                     callTrigger.removeAttribute("disabled");
+                    closeTrigger.removeAttribute("disabled");
                 
                 } else {
                     messages.textContent += `${data.peerid}: ${data.message}\n`;
@@ -151,10 +151,10 @@ var myHandler = (function(){
             
             // connectボタンのdisabled属性を削除
             connectTrigger.removeAttribute("disabled");
-            // callボタンを非活性化
+            // call, closeボタンを非活性化
             callTrigger.setAttribute("disabled", true);
+            closeTrigger.setAttribute("disabled", true);
         });
-
 
         // closeボタンのイベントリスナを登録
         closeTrigger.addEventListener('click', () => dataConnection.close(true), {
@@ -185,7 +185,6 @@ var myHandler = (function(){
         mediaConnection.once('close', () => {
             remoteVideo.srcObject.getTracks().forEach(track => track.stop());
             remoteVideo.srcObject = null;
-            
         });
 
         closeTrigger.addEventListener('click', () => mediaConnection.close(true));
@@ -350,5 +349,4 @@ var myHandler = (function(){
 
         closeTrigger.addEventListener('click', () => mediaConnection.close(true));
     });
-
 })();
