@@ -1,7 +1,7 @@
 const Peer = window.Peer;
 
 const myHandler = (function(){
-    /*イベントをkeyにして管理する関数*/
+    // イベントをkeyにして管理する関数
     var events = {},
         key = 0;
     return {
@@ -55,7 +55,7 @@ const myHandler = (function(){
     let keyEnd = null;
 
     function onClickBtn(dataConnection, type) {
-        /*send, start, restart, endボタンがクリックされた時の処理*/
+        // send, start, restart, endボタンがクリックされた時の処理
         return function() {
             const data = {
                 message: null,
@@ -72,16 +72,12 @@ const myHandler = (function(){
             messages.textContent += ` to ${dataConnection.remoteId}: ${data.message}\n`;
         }
     };
-    
-    const peer = (window.peer = new Peer({
-        key: window.SKYWAY_KEY,
-        debug: 3,
-    }));
 
     const localStream = await navigator.mediaDevices.getUserMedia({
         audio: true,
         video: window.VIDEO_OPTION,
     }).catch(console.error);
+
 
     // Render local stream
     localVideo.muted = true;
@@ -89,8 +85,12 @@ const myHandler = (function(){
     localVideo.playsInline = true;
     await localVideo.play().catch(console.error);
 
+    const peer = (window.peer = new Peer({
+        key: window.SKYWAY_KEY,
+        debug: 3,
+    }));
+
     peer.once('open', id => {
-        console.log(`Peer.on opened!`);
         localId.textContent = id;
     });
 
