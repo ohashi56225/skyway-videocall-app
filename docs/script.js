@@ -98,8 +98,10 @@ const myHandler = (function(){
     console.log("98");
 
     // handsonでは，peer.on(...)となっていたが，よくわからないのでpeer.once(...)のままにしておく
-    peer.once('open', id => (localId.textContent = id));
-    console.log("102");
+    peer.once('open', id => {
+        console.log("102");
+        localId.textContent = id;
+    });
 
     peer.on('error', console.error);
 
