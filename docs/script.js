@@ -42,7 +42,7 @@ const myHandler = (function(){
     const restartTrigger = document.getElementById('js-restart-trigger');
     const endTrigger = document.getElementById('js-end-trigger');
 
-    let isCalling = 0
+    let isCalling = 0;
 
     let localRecorder = null;
     let remoteRecorder = null;
@@ -53,6 +53,8 @@ const myHandler = (function(){
     let keyStart = null;
     let keyRestart = null;
     let keyEnd = null;
+
+    console.log("57");
 
     // 各コマンドのボタンをクリックしたときの処理
     function onClickBtn(dataConnection, type) {
@@ -72,6 +74,8 @@ const myHandler = (function(){
             messages.textContent += ` to ${dataConnection.remoteId}: ${data.message}\n`;
         }
     }
+
+    console.log("78");
     
     const peer = (window.peer = new Peer({
         key: window.SKYWAY_KEY,
@@ -83,14 +87,19 @@ const myHandler = (function(){
         video: window.VIDEO_OPTION,
     }).catch(console.error);
 
+    console.log("90");
+
     // Render local stream
     localVideo.muted = true;
     localVideo.srcObject = localStream;
     localVideo.playsInline = true;
     await localVideo.play().catch(console.error);
+    
+    console.log("98");
 
     // handsonでは，peer.on(...)となっていたが，よくわからないのでpeer.once(...)のままにしておく
     peer.once('open', id => (localId.textContent = id));
+    console.log("102");
 
     peer.on('error', console.error);
 
