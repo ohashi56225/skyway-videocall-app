@@ -1,6 +1,6 @@
 const Peer = window.Peer;
 
-var myHandler = (function(){
+const myHandler = (function(){
     /*send, start, restart, endボタンのクリックイベントを扱う関数*/
     var events = {},
         key = 0;
@@ -47,6 +47,8 @@ var myHandler = (function(){
     let localRecorder = null;
     let remoteRecorder = null;
 
+    let webSocketConnection = null;
+
     let keySend = null;
     let keyStart = null;
     let keyRestart = null;
@@ -56,31 +58,29 @@ var myHandler = (function(){
     function onClickBtn(dataConnection, type) {
         return function() {
             const data = {
-                peerid: localId.textContent,
                 message: null,
             };
             if (type === "/send") {
                 data.message = localText.value
                 localText.value = '';
-            } else {
+            } else if (type in window.SYSTEM_COMMAND_LIST) {
                 data.message = type;
+            } else {
+                console.log(`${type} is undefined command type.`)
             };
             dataConnection.send(data);
-            messages.textContent += `${data.peerid}: ${data.message}\n`;
+            messages.textContent += ` to ${dataConnection.remoteId}: ${data.message}\n`;
         }
     }
     
     const peer = (window.peer = new Peer({
-        key: window.__SKYWAY_KEY__,
+        key: window.SKYWAY_KEY,
         debug: 3,
     }));
 
     const localStream = await navigator.mediaDevices.getUserMedia({
         audio: true,
-        video: { 
-            width: {min: 320, max: 320}, 
-            height: {min: 240, max: 240}
-        }
+        video: window.VIDEO_OPTION,
     }).catch(console.error);
 
     // Render local stream
@@ -110,9 +110,9 @@ var myHandler = (function(){
         dataConnection.once('open', async () => {
             // accept/requestを待つ
             dataConnection.on('data', data => {
+                messages.textContent += `from ${dataConnection.remoteId}: ${data.message} (data.once)\n`;
                 if (data.message === "/accept") {
-                    messages.textContent += `${data.peerid}: ${data.message}\n`;
-                    messages.textContent += `=== DataConnection has been opened ===\n`;
+                    messages.textContent += `with ${dataConnection.remoteId}: DataConnection has been opened\n`;
 
                     //イベントを定義して，各keyを取得
                     keySend = myHandler.addListener(sendTrigger, 'click', onClickBtn(dataConnection, "/send"), false);
@@ -125,7 +125,7 @@ var myHandler = (function(){
                     closeTrigger.removeAttribute("disabled");
                 
                 } else {
-                    messages.textContent += `${data.peerid}: ${data.message}\n`;
+                    messages.textContent += `with ${dataConnection.remoteId}: DataConnection can't be opened\n`;
                     dataConnection.close(true);
                     // disabled属性を削除
                     connectTrigger.removeAttribute("disabled");
@@ -136,13 +136,13 @@ var myHandler = (function(){
 
         // データを受信したとき
         dataConnection.on('data', data => {
-            messages.textContent += `${data.peerid}: ${data.message} (data)\n`;
+            messages.textContent += `from ${dataConnection.remoteId}: ${data.message} (data.on)\n`;
         });
 
         // データチャネルのcloseが行われた時, 接続が切断された時
         dataConnection.once('close', () => {
             // massageにその旨を追記
-            messages.textContent += `=== DataConnection has been closed ===\n`;
+            messages.textContent += `with ${dataConnection.remoteId}: DataConnection has been closed\n`;
 
             myHandler.removeListener(keySend)
             myHandler.removeListener(keyStart)
@@ -202,7 +202,7 @@ var myHandler = (function(){
             localDownloadLink.href = "javascript:void(0)";
             remoteDownloadLink.href = "javascript:void(0)";
 
-            return
+            return;
         };
 
         if (localVideo.srcObject && remoteVideo.srcObject) {
@@ -273,8 +273,16 @@ var myHandler = (function(){
         }
     });
 
-    // 相手からconnectionが来た時に発火
+    // 相手からconnectionが来た時に発火（システム側）
     peer.on('connection', dataConnection => {
+        // もし一度もwebsocketに接続していなかった場合は，接続しておく
+        if (!webSocketConnection){
+            webSocketConnection = new WebSocket(window.WEBSOCKET_SERVER_URI);
+            webSocketConnection.addEventListener('error', function (event) {
+                console.log('WebSocket error: ', event);
+            });
+        };
+
         // disabled属性を設定
 		connectTrigger.setAttribute("disabled", true);
 
@@ -283,14 +291,11 @@ var myHandler = (function(){
             messages.textContent += `=== check accept/reject (isCalling: ${isCalling}) ===\n`;
 
             if (isCalling <= 1 ) {
-                messages.textContent += `=== can accept ===\n`;
                 const data = {
-                    peerid: localId.textContent,
-                    message: "/accept",
+                    message: "/accept"
                 };
                 dataConnection.send(data);
-                messages.textContent += `${data.peerid}: ${data.message}\n`;
-                messages.textContent += `=== DataConnection has been opened ===\n`;
+                messages.textContent += `to ${dataConnection.remoteId}: /accept\n`;
 
                 //イベントを定義すると同時に返ってきたkeyを取得;
                 keySend = myHandler.addListener(sendTrigger, 'click', onClickBtn(dataConnection, "/send"), false);
@@ -299,24 +304,27 @@ var myHandler = (function(){
                 keyEnd = myHandler.addListener(endTrigger, 'click', onClickBtn(dataConnection, "/end"), false);
             
             } else {
-                messages.textContent += `=== can't accept ===\n`;
                 const data = {
-                    peerid: localId.textContent,
                     message: "/reject",
                 }
                 dataConnection.send(data);
-                messages.textContent += `${data.peerid}: ${data.message}\n`;
+                messages.textContent += `to ${dataConnection.remoteId}: /reject\n`;
                 return;
             };
         });
 
         dataConnection.on('data', data => {
-            messages.textContent += `${data.peerid}: ${data.message} (data)\n`;
+            messages.textContent += `from ${dataConnection.remoteId}: ${data.message}\n`;
+            // コマンドを処理
+            if (data.message in window.SYSTEM_COMMAND_LIST){
+                webSocketConnection.send(data.message);
+                messages.textContent += `to WebSocket Server: ${data.message}`;
+            };
         });
 
         dataConnection.once('close', () => {
             isCalling--;
-            messages.textContent += `=== DataConnection has been closed ===\n`;
+            messages.textContent += `with DataConnection has been closed\n`;
 
             myHandler.removeListener(keySend)
             myHandler.removeListener(keyStart)
