@@ -78,7 +78,7 @@ const myHandler = (function(){
     console.log("78");
     
     const peer = (window.peer = new Peer({
-        key: window.SKYWAY_KEY,
+        key: "33ddbc6c-0f40-4fa3-bef1-9a9c83863649",
         debug: 3,
     }));
 
