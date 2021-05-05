@@ -1,7 +1,7 @@
 const Peer = window.Peer;
 
 const myHandler = (function(){
-    /*send, start, restart, endボタンのクリックイベントを扱う関数*/
+    /*イベントをkeyにして管理する関数*/
     var events = {},
         key = 0;
     return {
@@ -54,8 +54,8 @@ const myHandler = (function(){
     let keyRestart = null;
     let keyEnd = null;
 
-    // 各コマンドのボタンをクリックしたときの処理
     function onClickBtn(dataConnection, type) {
+        /*send, start, restart, endボタンがクリックされた時の処理*/
         return function() {
             const data = {
                 message: null,
@@ -71,7 +71,7 @@ const myHandler = (function(){
             dataConnection.send(data);
             messages.textContent += ` to ${dataConnection.remoteId}: ${data.message}\n`;
         }
-    }
+    };
     
     const peer = (window.peer = new Peer({
         key: window.SKYWAY_KEY,
@@ -82,7 +82,6 @@ const myHandler = (function(){
         audio: true,
         video: window.VIDEO_OPTION,
     }).catch(console.error);
-
 
     // Render local stream
     localVideo.muted = true;
@@ -321,7 +320,7 @@ const myHandler = (function(){
             // コマンドを処理
             if (window.SYSTEM_COMMAND_LIST.includes(data.message)){
                 webSocketConnection.send(data.message);
-                messages.textContent += `to WebSocket Server: ${data.message}`;
+                messages.textContent += `to WebSocket Server: ${data.message}\n`;
             };
         });
 
