@@ -1,16 +1,35 @@
 from websocket_server import WebsocketServer
 
-IP = "localhost"
-PORT = 8001
+class WebSocketManager:
+    def __init__(self, IP, PORT):
+        # 接続
+        self.server = WebsocketServer(PORT, host=IP)
 
-def new_client(client, server):
-    server.send_message_to_all("New client has joined")
+        # 設定
+        self.server.set_fn_new_client(self._when_new_client)
+        self.server.set_fn_message_received(self._when_message_received)
 
-def send_msg_allclient(client, server, message):
-    print(message)
-    server.send_message_to_all(message)
+    def _when_new_client(self, client, server):
+        """
+        新規のclientが接続してきたときの処理
+        """
+        print("new client")
 
-server = WebsocketServer(PORT, host=IP)
-server.set_fn_new_client(new_client)
-server.set_fn_message_received(send_msg_allclient)
-server.run_forever()
+    def _when_message_received(self, client, server, message):
+        """
+        あるclientからmessageを受信したとき
+        """
+        print(message)
+
+    def run_forever(self):
+        """
+        サーバー起動
+        """
+        self.server.run_forever()
+
+if __name__ == "__main__":
+    IP = "localhost"
+    PORT = 8001
+
+    wsm = WebSocketManager(IP, PORT)
+    wsm.run_forever()

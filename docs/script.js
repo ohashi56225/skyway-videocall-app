@@ -54,8 +54,6 @@ const myHandler = (function(){
     let keyRestart = null;
     let keyEnd = null;
 
-    console.log("57");
-
     // 各コマンドのボタンをクリックしたときの処理
     function onClickBtn(dataConnection, type) {
         return function() {
@@ -65,7 +63,7 @@ const myHandler = (function(){
             if (type === "/send") {
                 data.message = localText.value
                 localText.value = '';
-            } else if (type in window.SYSTEM_COMMAND_LIST) {
+            } else if (window.SYSTEM_COMMAND_LIST.includes(type)) {
                 data.message = type;
             } else {
                 console.log(`${type} is undefined command type.`)
@@ -74,11 +72,9 @@ const myHandler = (function(){
             messages.textContent += ` to ${dataConnection.remoteId}: ${data.message}\n`;
         }
     }
-
-    console.log("78");
     
     const peer = (window.peer = new Peer({
-        key: "33ddbc6c-0f40-4fa3-bef1-9a9c83863649",
+        key: window.SKYWAY_KEY,
         debug: 3,
     }));
 
@@ -87,19 +83,15 @@ const myHandler = (function(){
         video: window.VIDEO_OPTION,
     }).catch(console.error);
 
-    console.log("90");
 
     // Render local stream
     localVideo.muted = true;
     localVideo.srcObject = localStream;
     localVideo.playsInline = true;
     await localVideo.play().catch(console.error);
-    
-    console.log("98");
 
-    // handsonでは，peer.on(...)となっていたが，よくわからないのでpeer.once(...)のままにしておく
-    peer.on('open', id => {
-        console.log("102");
+    peer.once('open', id => {
+        console.log(`Peer.on opened!`);
         localId.textContent = id;
     });
 
@@ -327,7 +319,7 @@ const myHandler = (function(){
         dataConnection.on('data', data => {
             messages.textContent += `from ${dataConnection.remoteId}: ${data.message}\n`;
             // コマンドを処理
-            if (data.message in window.SYSTEM_COMMAND_LIST){
+            if (window.SYSTEM_COMMAND_LIST.includes(data.message)){
                 webSocketConnection.send(data.message);
                 messages.textContent += `to WebSocket Server: ${data.message}`;
             };
