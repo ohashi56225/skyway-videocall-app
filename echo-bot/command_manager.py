@@ -81,7 +81,6 @@ class CommandManager(BaseWebSocketServer):
         self.command_queue.clear()
         print("{}:: Cleared command queue.".format(self.__class__.__name__))
 
-        
 
 if __name__ == "__main__":
     IP = "localhost"

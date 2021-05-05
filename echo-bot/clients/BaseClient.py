@@ -3,9 +3,11 @@ import json
 import time
 
 class Base:
-    def __init__(self, ip_port):
+    def __init__(self, ip_port, timeout=-1):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         print("{}:: Connecting to Server...".format(self.__class__.__name__))
+        if timeout >= 0:
+            self.sock.settimeout(timeout)
         self.sock.connect(ip_port)
         print("{}:: Connected successfully.".format(self.__class__.__name__))
 

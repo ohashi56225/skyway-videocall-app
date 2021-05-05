@@ -2,7 +2,7 @@ from clients.GoogleSpeechRecognition import GoogleSpeechRecognition
 from clients.AmazonPolly import AmazonPolly
 from command_manager import CommandManager
 
-asr_client = GoogleSpeechRecognition(("localhost", 8888))
+asr_client = GoogleSpeechRecognition(("localhost", 8888), 3)
 tts_client = AmazonPolly(("localhost", 3456))
 
 cm = CommandManager("localhost", 8001)
@@ -18,6 +18,8 @@ while True:
         elif cmd == "/end": user_utt = "対話を終了します"
     else:
         asr_result = asr_client.listen_once()
-        user_utt = asr_result["usr_utt"]
+        if asr_result["usr_utt"] != "silence":
+            user_utt = asr_result["usr_utt"]
 
-    tts_client.play_utt(user_utt)
+    if user_utt:
+        tts_client.play_utt(user_utt)

@@ -1,12 +1,13 @@
 import json
 import time
+import socket
 from threading import Thread
 from copy import deepcopy
 from clients.BaseClient import Base
 
 class GoogleSpeechRecognition(Base):
-    def __init__(self, ip_port):
-        super().__init__(ip_port)
+    def __init__(self, ip_port, silence_period):
+        super().__init__(ip_port, timeout=silence_period)
 
         self.is_active = False
         self.received_data = None
@@ -45,7 +46,10 @@ class GoogleSpeechRecognition(Base):
         usr_utt, confidence = "", float()
         while True:
             received_str = ""
-            received_data = self._receive(1024)
+            try:
+                received_data = self._receive(1024)
+            except socket.timeout:
+                received_data = "result:silence\nconfidence:1\n".encode("utf-8")
 
             if received_data:
                 try:
@@ -59,11 +63,15 @@ class GoogleSpeechRecognition(Base):
             
             if received_str.startswith("result:"):
                 # resultを受け取る
+                print(received_str)
                 result_str, confidence_str, _ = received_str.split("\n")
-                usr_utt = result_str.lstrip("result:")
-                confidence = float(confidence_str.lstrip("confidence:"))
+                print(result_str)
+                usr_utt = result_str.split(":")[1]
+                print(usr_utt)
+                confidence = float(confidence_str.split(":")[1])
                 # 終了
                 break
+                # silence periodだけ，沈黙が続いたとき
         
         # 3. サーバを停止
         self.stop_server()
