@@ -178,10 +178,11 @@ const myHandler = (function(){
         const mediaConnection = peer.call(remoteId.value, localStream);
 
         mediaConnection.on('stream', async stream => {
+            console.log("届いた");
             // Render remote stream for caller
             remoteVideo.srcObject = stream;
             remoteVideo.playsInline = true;
-            //await remoteVideo.play().catch(console.error);
+            await remoteVideo.play().catch(console.error);
         });
 
         mediaConnection.once('close', () => {
