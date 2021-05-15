@@ -181,7 +181,7 @@ const myHandler = (function(){
             // Render remote stream for caller
             remoteVideo.srcObject = stream;
             remoteVideo.playsInline = true;
-            await remoteVideo.play().catch(console.error);
+            //await remoteVideo.play().catch(console.error);
         });
 
         mediaConnection.once('close', () => {
